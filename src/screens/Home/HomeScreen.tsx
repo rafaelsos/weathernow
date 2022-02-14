@@ -1,4 +1,3 @@
-/* eslint-disable no-catch-shadow */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useEffect, useState } from 'react'
 import {
@@ -58,9 +57,7 @@ export const HomeScreen: React.FC = () => {
       )
       setDate(formatDateUTC(new Date(), 'EEEE , dd MMMM yyyy'))
       setLoading(false)
-    } catch (error) {
-      console.log('Error', error)
-
+    } catch {
       setError('Não foi possível buscar as informações.')
       setLoading(false)
     }
@@ -81,8 +78,6 @@ export const HomeScreen: React.FC = () => {
       </View>
     )
   }
-
-  console.log(dataWeather)
 
   return (
     <ScrollView
