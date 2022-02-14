@@ -13,7 +13,7 @@ class OpenWeatherMapService extends ServiceConfig {
     weatherRequest: IOpenWeatherMapRequest,
   ): Promise<AxiosResponse<IWeather>> =>
     this.get(
-      `weather?lat=${weatherRequest.lat}&lon=${weatherRequest.lon}&appid=${appid}`,
+      `weather?lat=${weatherRequest.lat}&lon=${weatherRequest.lon}&appid=${appid}&units=metric`,
     )
 }
 

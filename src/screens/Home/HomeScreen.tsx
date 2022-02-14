@@ -1,8 +1,14 @@
+/* eslint-disable no-catch-shadow */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useEffect, useState } from 'react'
-import { Alert, ScrollView } from 'react-native'
-import { View, Text, TouchableOpacity } from 'react-native'
-import SplashScreen from 'react-native-splash-screen'
+import {
+  Alert,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native'
 
 import { IWeather } from '~/@types/entities/Weather.types'
 import { formatDateUTC } from '~/libs/dateFormat'
@@ -16,7 +22,11 @@ export const HomeScreen: React.FC = () => {
   const { getWeather } = new OpenWeatherMapService()
 
   const [location, setLocation] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [dataWeather, setDataWeather] = useState<IWeather>({} as IWeather)
+  const [updatedWeather, setUpdatedWeather] = useState('')
+  const [date, setDate] = useState('')
+  const [error, setError] = useState('')
 
   const handleLoadingLocation = useCallback(async () => {
     const infoLocation = await getLocation()
@@ -29,24 +39,50 @@ export const HomeScreen: React.FC = () => {
     setLocation(infoLocation)
   }, [])
 
-  useEffect(() => {
-    SplashScreen.hide()
-    handleLoadingLocation()
-    fetchDataWeather()
-  }, [handleLoadingLocation])
-
   const fetchDataWeather = useCallback(async () => {
     if (!location) {
       return
     }
 
-    const response = await getWeather({
-      lat: location?.latitude,
-      lon: location?.longitude,
-    })
+    setError('')
+    setLoading(true)
+    try {
+      const response = await getWeather({
+        lat: location?.latitude,
+        lon: location?.longitude,
+      })
 
-    setDataWeather(response.data)
+      setDataWeather(response.data)
+      setUpdatedWeather(
+        `Atualizado às ${formatDateUTC(new Date(), 'HH:mm:ss')}`,
+      )
+      setDate(formatDateUTC(new Date(), 'EEEE , dd MMMM yyyy'))
+      setLoading(false)
+    } catch (error) {
+      console.log('Error', error)
+
+      setError('Não foi possível buscar as informações.')
+      setLoading(false)
+    }
   }, [getWeather, location])
+
+  useEffect(() => {
+    handleLoadingLocation()
+  }, [])
+
+  useEffect(() => {
+    fetchDataWeather()
+  }, [location])
+
+  if (loading) {
+    return (
+      <View style={styles.homeScreen__loadingView}>
+        <ActivityIndicator />
+      </View>
+    )
+  }
+
+  console.log(dataWeather)
 
   return (
     <ScrollView
@@ -60,41 +96,32 @@ export const HomeScreen: React.FC = () => {
       </View>
 
       <View style={styles.homeScreen__containerWeatherView}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 8,
-          }}
-        >
-          <Text style={styles.homeScreen__weatherText}>
-            {dataWeather?.main?.temp}°
-          </Text>
-
-          <View
-            style={{
-              height: 60,
-              width: 2,
-              marginHorizontal: 8,
-              borderWidth: 1,
-            }}
-          />
-
-          <View>
-            <Text style={styles.homeScreen__lightText}>
-              {dataWeather?.main?.temp_max}°
+        {error ? (
+          <Text style={styles.homeScreen__lightText}>{error}°</Text>
+        ) : (
+          <View style={styles.homeScreen__containerTempView}>
+            <Text style={styles.homeScreen__weatherText}>
+              {dataWeather?.main?.temp}°
             </Text>
-            <Text style={styles.homeScreen__lightText}>
-              {dataWeather?.main?.temp_min}°
-            </Text>
+
+            <View style={styles.homeScreen__divider} />
+
+            <View>
+              <Text style={styles.homeScreen__lightText}>
+                {dataWeather?.main?.temp_max}°
+              </Text>
+              <Text style={styles.homeScreen__lightText}>
+                {dataWeather?.main?.temp_min}°
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         <Text style={styles.homeScreen__regularText}>
           {dataWeather?.weather?.length > 0 && dataWeather?.weather[0]?.main}
         </Text>
         <Text style={styles.homeScreen__regularText}>
-          Sensção termica {dataWeather?.main?.feels_like}°
+          Sensação termica {dataWeather?.main?.feels_like}°
         </Text>
         <Text style={styles.homeScreen__regularText}>
           Humidade do ar: {dataWeather?.main?.humidity}
@@ -103,10 +130,8 @@ export const HomeScreen: React.FC = () => {
 
       <View style={styles.homeScreen__footerView}>
         <View style={styles.homeScreen__containerDateView}>
-          <Text style={styles.homeScreen__mediumText}>
-            {formatDateUTC(new Date(), 'EEEE , dd MMMM yyyy')}
-          </Text>
-          <Text style={styles.homeScreen__lightText}>Atualizado às 23:38</Text>
+          <Text style={styles.homeScreen__mediumText}>{date}</Text>
+          <Text style={styles.homeScreen__lightText}>{updatedWeather}</Text>
         </View>
 
         <TouchableOpacity
@@ -117,18 +142,6 @@ export const HomeScreen: React.FC = () => {
             Atualizar informações
           </Text>
         </TouchableOpacity>
-
-        {/* <TouchableOpacity
-          style={styles.homeScreen__button}
-          onPress={handleLoadingLocation}
-        >
-          <Text style={styles.homeScreen__mediumText}>GET LOCATION</Text>
-        </TouchableOpacity> */}
-
-        {/* <View style={{ alignItems: 'center', marginTop: 16 }}>
-          <Text>Latitude: {location?.latitude}</Text>
-          <Text>Longitude: {location?.longitude}</Text>
-        </View> */}
       </View>
     </ScrollView>
   )

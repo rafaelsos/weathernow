@@ -1,4 +1,10 @@
-import { Alert, Linking, Platform } from 'react-native'
+import {
+  Alert,
+  Linking,
+  Platform,
+  PermissionsAndroid,
+  ToastAndroid,
+} from 'react-native'
 import Geolocation, { GeoPosition } from 'react-native-geolocation-service'
 
 const handleOpenSetting = () =>
@@ -33,7 +39,38 @@ const handlePermissionIOS = async () => {
 }
 
 const handlePermissionANDROID = async () => {
-  //adicionar as permissões para ANDROID
+  if (Platform.OS === 'android' && Platform.Version < 23) {
+    return true
+  }
+
+  const hasPermission = await PermissionsAndroid.check(
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  )
+
+  if (hasPermission) {
+    return true
+  }
+
+  const status = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  )
+
+  if (status === PermissionsAndroid.RESULTS.GRANTED) {
+    return true
+  }
+
+  if (status === PermissionsAndroid.RESULTS.DENIED) {
+    ToastAndroid.show(
+      'Permissão de localização negada pelo usuário.',
+      ToastAndroid.LONG,
+    )
+  } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+    ToastAndroid.show(
+      'Permissão de localização revogada pelo usuário.',
+      ToastAndroid.LONG,
+    )
+  }
+
   return false
 }
 

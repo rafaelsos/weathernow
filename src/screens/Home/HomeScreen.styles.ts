@@ -84,4 +84,25 @@ export default () =>
 
       elevation: 1,
     },
+
+    homeScreen__loadingView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.primary,
+    },
+
+    homeScreen__divider: {
+      height: 60,
+      width: 2,
+      marginHorizontal: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.fiventenary,
+    },
+
+    homeScreen__containerTempView: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
   })
